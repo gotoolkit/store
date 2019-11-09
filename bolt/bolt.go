@@ -1,12 +1,13 @@
 package bolt
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/docker/libkv/store"
+	"github.com/gotoolkit/store"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -135,7 +136,63 @@ func (s *Store) Exists(key string) (bool, error) {
 		return nil
 	})
 
-	return len(val) != 0, err
+	return len(val) > 0, err
+}
+
+func (s *Store) List(keyPrefix string) ([][]byte, error) {
+	var (
+		err error
+	)
+	s.Lock()
+	defer s.Unlock()
+
+	kv := [][]byte{}
+
+	err = s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(s.bucket)
+		if bucket == nil {
+			return store.ErrKeyNotFound
+		}
+
+		cursor := bucket.Cursor()
+		prefix := []byte(keyPrefix)
+		for key, v := cursor.Seek(prefix); bytes.HasPrefix(key, prefix); key, v = cursor.Next() {
+			kv = append(kv, v)
+		}
+
+		return nil
+	})
+
+	if len(kv) == 0 {
+		return nil, store.ErrKeyNotFound
+	}
+
+	return kv, err
+}
+
+func (s *Store) DeleteTree(keyPrefix string) error {
+	var (
+		err error
+	)
+	s.Lock()
+	defer s.Unlock()
+
+	err = s.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(s.bucket)
+		if bucket == nil {
+			return store.ErrKeyNotFound
+		}
+
+		cursor := bucket.Cursor()
+		prefix := []byte(keyPrefix)
+		for key, _ := cursor.Seek(prefix); bytes.HasPrefix(key, prefix); key, _ = cursor.Next() {
+			_ = bucket.Delete([]byte(key))
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 func (s *Store) Close() {

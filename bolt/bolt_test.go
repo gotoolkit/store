@@ -8,7 +8,7 @@ import (
 )
 
 func makeBoltDBClient(t *testing.T) *Store {
-	kv, err := New("/tmp/not_exist_dir/__boltdbtest", WithBucket([]byte("bucket")))
+	kv, err := New("/tmp/not_exist_dir/__boltdbtest", WithBucket("bucket"))
 
 	if err != nil {
 		t.Fatalf("cannot create store: %v", err)

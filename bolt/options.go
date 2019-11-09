@@ -27,8 +27,8 @@ func WithTimeout(timeout time.Duration) Option {
 	})
 }
 
-func WithBucket(bucket []byte) Option {
+func WithBucket(bucket string) Option {
 	return optionFunc(func(o *options) {
-		o.Bucket = bucket
+		o.Bucket = []byte(bucket)
 	})
 }
