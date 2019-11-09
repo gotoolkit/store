@@ -6,7 +6,7 @@ type Store struct {
 	container map[string][]byte
 }
 
-func NewStore() (*Store, error) {
+func New() (*Store, error) {
 
 	return &Store{
 		container: make(map[string][]byte),

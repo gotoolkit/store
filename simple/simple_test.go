@@ -7,7 +7,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	s, err := NewStore()
+	s, err := New()
 	assert.NoError(t, err)
 	assert.NotNil(t, s)
 	key1 := "TestKV1"
